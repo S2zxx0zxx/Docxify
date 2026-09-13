@@ -1,0 +1,49 @@
+archive=Doclify-main.zip
+valid_zip=True
+first_bad_member=
+member_count=43
+
+size	compressed	crc32	path
+0	0	00000000	Doclify-main/
+0	0	00000000	Doclify-main/.github/
+0	0	00000000	Doclify-main/.github/workflows/
+703	350	43894e45	Doclify-main/.github/workflows/publish.yml
+4696	1932	85a55d08	Doclify-main/.gitignore
+5	5	5159eecf	Doclify-main/.python-version
+34523	11760	4fd1a78d	Doclify-main/LICENSE
+18000	6957	31c0fd28	Doclify-main/README.md
+0	0	00000000	Doclify-main/doclify/
+22	22	9a84e044	Doclify-main/doclify/__init__.py
+0	0	00000000	Doclify-main/doclify/components/
+0	0	00000000	Doclify-main/doclify/components/__init__.py
+2080	704	0fb0b2c4	Doclify-main/doclify/components/config.py
+4831	1546	60004bcd	Doclify-main/doclify/components/init.py
+2280	898	f7880a4b	Doclify-main/doclify/components/models.py
+7232	2180	29364ec1	Doclify-main/doclify/components/run.py
+6169	1969	39e8bef5	Doclify-main/doclify/components/update.py
+0	0	00000000	Doclify-main/doclify/config/
+0	0	00000000	Doclify-main/doclify/config/__init__.py
+108	86	8febd781	Doclify-main/doclify/config/constants.py
+0	0	00000000	Doclify-main/doclify/pipelines/
+0	0	00000000	Doclify-main/doclify/pipelines/__init__.py
+3136	1178	a0019cf1	Doclify-main/doclify/pipelines/supervisor.py
+0	0	00000000	Doclify-main/doclify/prompts/
+1732	913	efc84cab	Doclify-main/doclify/prompts/batch_summary.txt
+7456	3523	7470912c	Doclify-main/doclify/prompts/final_summary.txt
+0	0	00000000	Doclify-main/doclify/resources/
+4592	1895	30223e93	Doclify-main/doclify/resources/Python.gitignore
+0	0	00000000	Doclify-main/doclify/resources/__init__.py
+0	0	00000000	Doclify-main/doclify/schema/
+351	210	cc9d6563	Doclify-main/doclify/schema/schema.py
+0	0	00000000	Doclify-main/doclify/utils/
+0	0	00000000	Doclify-main/doclify/utils/__init__.py
+2424	890	6a69486f	Doclify-main/doclify/utils/extract.py
+2002	810	447b08dd	Doclify-main/doclify/utils/file_utils.py
+3081	1219	d7e2bdb3	Doclify-main/doclify/utils/llm.py
+1850	701	e3c3ac59	Doclify-main/doclify/utils/logger.py
+3643	1386	07aae666	Doclify-main/doclify/utils/readme.py
+1406	580	30231d18	Doclify-main/doclify/utils/scanner.py
+507	282	8c61fd78	Doclify-main/doclify/utils/utils.py
+83	77	8e0084b3	Doclify-main/main.py
+954	523	15804472	Doclify-main/pyproject.toml
+231545	71851	719a7558	Doclify-main/uv.lock
