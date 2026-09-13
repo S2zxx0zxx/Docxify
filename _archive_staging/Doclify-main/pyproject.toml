@@ -1,0 +1,47 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[tool.uv]
+package = true
+
+[project]
+name = "doclify"
+version = "0.2.2"
+description = "AI-powered documentation generator for Python projects"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "GNU AFFERO GENERAL PUBLIC LICENSE"}
+authors = [
+  {name = "Hema Kalyan", email = "mhemakalyan@gmail.com"}
+]
+
+dependencies = [
+    "click",
+    "pathspec>=1.0.3",
+    "pyyaml",
+    "rich",
+    "python-dotenv",
+    "groq>=1.1.1"
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=9.0.2",
+    "twine>=6.2.0",
+]
+
+[project.urls]
+Repository = "https://github.com/KalyanM45/Doclify"
+Issues = "https://github.com/KalyanM45/Doclify/issues"
+
+[project.scripts]
+doclify = "doclify.pipelines.supervisor:cli"
+
+[tool.setuptools]
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["doclify*"]
+
+[tool.setuptools.package-data]
+"doclify" = ["resources/*.gitignore"]
