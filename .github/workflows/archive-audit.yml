@@ -6,6 +6,7 @@ on:
       - audit/archive-review-20260914
     paths-ignore:
       - ARCHIVE_AUDIT_MANIFEST.txt
+      - _archive_staging/**
 
 permissions:
   contents: write
@@ -15,40 +16,57 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Inspect ZIP metadata only
+      - name: Validate and stage ZIP without executing archive code
         shell: bash
         run: |
           python - <<'PY'
-          from pathlib import Path
+          from pathlib import Path, PurePosixPath
+          import shutil
           import zipfile
 
           archive = Path('Doclify-main.zip')
+          staging = Path('_archive_staging')
           if not archive.is_file():
               raise SystemExit(f'Missing archive: {archive}')
 
+          if staging.exists():
+              shutil.rmtree(staging)
+          staging.mkdir()
+
           with zipfile.ZipFile(archive) as zf:
               bad = zf.testzip()
+              if bad is not None:
+                  raise SystemExit(f'Corrupt ZIP member: {bad}')
+
+              infos = zf.infolist()
+              for info in infos:
+                  p = PurePosixPath(info.filename)
+                  if p.is_absolute() or '..' in p.parts:
+                      raise SystemExit(f'Unsafe ZIP path: {info.filename}')
+
               rows = [
                   f'archive={archive}',
-                  f'valid_zip={bad is None}',
-                  f'first_bad_member={bad or ""}',
-                  f'member_count={len(zf.infolist())}',
+                  'valid_zip=True',
+                  'first_bad_member=',
+                  f'member_count={len(infos)}',
                   '',
                   'size\tcompressed\tcrc32\tpath',
               ]
-              for info in zf.infolist():
+              for info in infos:
                   rows.append(f'{info.file_size}\t{info.compress_size}\t{info.CRC:08x}\t{info.filename}')
+
+              zf.extractall(staging)
 
           Path('ARCHIVE_AUDIT_MANIFEST.txt').write_text('\n'.join(rows) + '\n', encoding='utf-8')
           PY
-      - name: Commit manifest to audit branch
+      - name: Commit staged source to audit branch
         shell: bash
         run: |
-          if git diff --quiet -- ARCHIVE_AUDIT_MANIFEST.txt && git ls-files --error-unmatch ARCHIVE_AUDIT_MANIFEST.txt >/dev/null 2>&1; then
-            exit 0
-          fi
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add ARCHIVE_AUDIT_MANIFEST.txt
-          git commit -m "chore(audit): inspect Doclify archive contents"
+          git add ARCHIVE_AUDIT_MANIFEST.txt _archive_staging
+          if git diff --cached --quiet; then
+            exit 0
+          fi
+          git commit -m "chore(audit): stage Doclify archive source"
           git push
