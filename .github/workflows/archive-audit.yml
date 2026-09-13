@@ -1,0 +1,54 @@
+name: Archive Audit
+
+on:
+  push:
+    branches:
+      - audit/archive-review-20260914
+    paths-ignore:
+      - ARCHIVE_AUDIT_MANIFEST.txt
+
+permissions:
+  contents: write
+
+jobs:
+  inspect-archive:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Inspect ZIP metadata only
+        shell: bash
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          import zipfile
+
+          archive = Path('Doclify-main.zip')
+          if not archive.is_file():
+              raise SystemExit(f'Missing archive: {archive}')
+
+          with zipfile.ZipFile(archive) as zf:
+              bad = zf.testzip()
+              rows = [
+                  f'archive={archive}',
+                  f'valid_zip={bad is None}',
+                  f'first_bad_member={bad or ""}',
+                  f'member_count={len(zf.infolist())}',
+                  '',
+                  'size\tcompressed\tcrc32\tpath',
+              ]
+              for info in zf.infolist():
+                  rows.append(f'{info.file_size}\t{info.compress_size}\t{info.CRC:08x}\t{info.filename}')
+
+          Path('ARCHIVE_AUDIT_MANIFEST.txt').write_text('\n'.join(rows) + '\n', encoding='utf-8')
+          PY
+      - name: Commit manifest to audit branch
+        shell: bash
+        run: |
+          if git diff --quiet -- ARCHIVE_AUDIT_MANIFEST.txt && git ls-files --error-unmatch ARCHIVE_AUDIT_MANIFEST.txt >/dev/null 2>&1; then
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add ARCHIVE_AUDIT_MANIFEST.txt
+          git commit -m "chore(audit): inspect Doclify archive contents"
+          git push
