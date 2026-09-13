@@ -1,0 +1,59 @@
+name: Repair committed archive
+
+on:
+  push:
+    branches:
+      - repair/unpack-archive-20260914
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    if: ${{ !contains(github.event.head_commit.message, '[archive-extracted]') }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repair branch
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.ref_name }}
+
+      - name: Safely extract committed ZIP
+        shell: bash
+        run: |
+          set -euo pipefail
+          python3 - "Doclify-main.zip" <<'PY'
+          import pathlib, shutil, stat, sys, tempfile, zipfile
+          archive = pathlib.Path(sys.argv[1])
+          if not archive.is_file(): raise SystemExit(f"Archive not found: {archive}")
+          temp_root = pathlib.Path(tempfile.mkdtemp(prefix="archive-repair-"))
+          try:
+              with zipfile.ZipFile(archive) as zf:
+                  infos = zf.infolist()
+                  if sum(i.file_size for i in infos) > 200 * 1024 * 1024: raise SystemExit("Archive too large")
+                  for info in infos:
+                      path = pathlib.PurePosixPath(info.filename.replace("\\", "/"))
+                      if path.is_absolute() or ".." in path.parts: raise SystemExit(f"Unsafe ZIP path: {info.filename}")
+                      if ((info.external_attr >> 16) & 0o170000) == stat.S_IFLNK: raise SystemExit(f"Symlink not allowed: {info.filename}")
+                  zf.extractall(temp_root)
+              children = list(temp_root.iterdir())
+              source = children[0] if len(children) == 1 and children[0].is_dir() else temp_root
+              for item in source.iterdir():
+                  if item.name == ".git": continue
+                  dest = pathlib.Path.cwd() / item.name
+                  shutil.copytree(item, dest, dirs_exist_ok=True) if item.is_dir() else shutil.copy2(item, dest)
+              archive.unlink()
+          finally:
+              shutil.rmtree(temp_root, ignore_errors=True)
+          PY
+
+      - name: Commit extracted source
+        shell: bash
+        run: |
+          set -euo pipefail
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if git diff --cached --quiet; then exit 0; fi
+          git commit -m "chore: extract committed project archive [archive-extracted]"
+          git push origin "HEAD:${{ github.ref_name }}"
